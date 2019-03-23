@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">SpotifyVoiceCommand</string>
+    <string name="trackTitle"> hello </string>
 </resources>
