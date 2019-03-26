@@ -1,4 +1,5 @@
 <resources>
-    <string name="app_name">SpotifyVoiceCommand</string>
-    <string name="trackTitle"> hello </string>
+    <string name="app_name">SVC</string>
+    <string name="recording_state_play"> Start Recording Commands </string>
+    <string name="recording_state_pause"> Stop Recording Commands </string>
 </resources>

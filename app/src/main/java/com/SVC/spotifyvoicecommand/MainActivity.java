@@ -1,58 +1,63 @@
 package com.SVC.spotifyvoicecommand;
 
+import android.Manifest;
 import android.content.Intent;
-import android.media.Image;
+import android.content.pm.PackageManager;
+import android.speech.RecognitionListener;
+import android.speech.RecognitionService;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
-
-import com.spotify.protocol.types.ImageUri;
-import com.spotify.sdk.android.authentication.AuthenticationClient;
-import com.spotify.sdk.android.authentication.AuthenticationRequest;
-import com.spotify.sdk.android.authentication.AuthenticationResponse;
 
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
-import com.spotify.protocol.client.Subscription;
-import com.spotify.protocol.types.PlayerState;
 import com.spotify.protocol.types.Track;
 
+import java.util.ArrayList;
+import java.util.Locale;
 
 
 public class MainActivity extends AppCompatActivity {
 
-    // authentication required info
-    private static final int REQUEST_CODE = 1138;
+    // required info for authentication
     private static final String REDIRECT_URI = "com.SVC.spotifyvoicecommand://callback";
     private static final String CLIENT_ID = "92348339626f44faa05efdedf8ac93d1";
     private static final String [] scopes = {"app-remote-control", "streaming"};
 
+    // codes
+    private static final int REQUEST_RECORD_AUDIO = 8;
+
     // track info
     private TextView artistName;
     private TextView trackTitle;
-    private ImageUri trackImageUri;
+    private Button commandState;
 
-
+    // appremote used to access Spotify features
     private SpotifyAppRemote mSpotifyAppRemote;
-
-    protected void openLoginActivity () {
-        AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(CLIENT_ID, AuthenticationResponse.Type.TOKEN, REDIRECT_URI);
-        builder.setScopes(scopes);
-
-        AuthenticationRequest request = builder.build();
-        AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-//        openLoginActivity();
+
+        // track info
+        trackTitle = findViewById(R.id.trackTitle);
+        artistName = findViewById(R.id.artistName);
+
+        // button
+        commandState = findViewById(R.id.commandState);
+
+        onStartCommandState();
+
     }
 
     @Override
@@ -67,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
                         .build();
 
 
-        // connects to the spotify app remote, allowing access to spotify api
+        // connects to the spotify app remote
         SpotifyAppRemote.connect(this, connectionParams,
                 new Connector.ConnectionListener() {
 
@@ -93,66 +98,148 @@ public class MainActivity extends AppCompatActivity {
         SpotifyAppRemote.disconnect(mSpotifyAppRemote);
     }
 
-
     private void connected() {
-
-        // ----------- TESTING PURPOSES, IDK WHERE ELSE TO PUT Lol -----------------------
-        // Play a playlist
-        mSpotifyAppRemote.getPlayerApi().play("spotify:playlist:0fZm7ygIaFLpTX7AEd38WT");
-
 
         // Subscribe to PlayerState
         mSpotifyAppRemote.getPlayerApi()
                 .subscribeToPlayerState()
+
+                // create a listener that checks for any changes to player's state
                 .setEventCallback(playerState -> {
+
+                    // get the player's track
                     final Track track = playerState.track;
+
+                    // if the track exists
                     if (track != null) {
 
+                        // update log on track info
                         Log.d("MainActivity", track.name + " by " + track.artist.name);
+
+                        // update main view on track info
+                        setTrackDisplay(track.name, track.artist.name);
+
                     }
-                    // IDK why we can't use Track Display.java and isntead have to create
-                    // text on MainActivity. reminder to fix this in the future to make modular
-
-                    setTrackDisplay(track.artist.name, track.name);
-
                 });
-
-
-
-
     }
 
+    /**
+     * Update track information (info = title of the song currently playing, artist) on the main
+     * view
+     * @param title of the Song
+     * @param name of the Artist
+     */
     private void setTrackDisplay(String title, String name) {
-        trackTitle = findViewById(R.id.trackTitle);
         trackTitle.setText(title);
-
-        artistName = findViewById(R.id.artistName);
         artistName.setText(name);
     }
 
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        super.onActivityResult(requestCode, resultCode, intent);
+    /**
+     * Deals with the event that the user wants to start making commands for the Spotify app remote
+     */
+    private void onStartCommandState() {
+        // listener for the button that handles spotify commands
+        commandState.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
 
-        // Check if result comes from the correct activity
-        if (requestCode == REQUEST_CODE) {
-            AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
+                // only initiate commands if permission to record audio given
+                if (hasPermissionToRecordAudio()) {
 
-            switch (response.getType()) {
-                // Response was successful and contains auth token
-                case TOKEN:
-                    // Handle successful response
-                    connected();
-                    break;
+                    // create object to recognise speech user will speak
+                    SpeechRecognizer speechRecognizer = SpeechRecognizer.createSpeechRecognizer(MainActivity.this);
 
-                // Auth flow returned an error
-                case ERROR:
-                    // Handle error response
-                    break;
+                    // create something that will recognise user's current verbal state
+                    // (i.e. if they're talking, stopped talking, etc.)
+                    RecognitionListener listener = new RecognitionListener() {
+                        @Override
+                        public void onReadyForSpeech(Bundle bundle) {
+                            Log.d("TAG", "onReady");
+                        }
 
-                // Most likely auth flow was cancelled
-                default:
-                    // Handle other cases
+                        @Override
+                        public void onBeginningOfSpeech() {
+                            Log.d("TAG", "onBeginner");
+
+                        }
+
+                        @Override
+                        public void onRmsChanged(float v) {
+                            Log.d("TAG", "onRMS");
+
+                        }
+
+                        @Override
+                        public void onBufferReceived(byte[] bytes) {
+                            Log.d("TAG", "onBuffer");
+
+                        }
+
+                        @Override
+                        public void onEndOfSpeech() {
+                            Log.d("TAG", "onEnd");
+
+                        }
+
+                        @Override
+                        public void onError(int i) {
+                            Log.d("TAG", "onError");
+
+                        }
+
+                        @Override
+                        public void onResults(Bundle bundle) {
+                            Log.d("TAG", "onResults");
+                            ArrayList<String> data = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                            String resultAsString = "";
+                            for(int i = 0; i < data.size(); i++){
+                                resultAsString = resultAsString + data.get(i);
+                            }
+                            Log.d("Tag", resultAsString);
+                        }
+
+                        @Override
+                        public void onPartialResults(Bundle bundle) {
+                            Log.d("TAG", "onPartial");
+
+                        }
+
+                        @Override
+                        public void onEvent(int i, Bundle bundle) {
+                            Log.d("TAG", "onEvent");
+
+                        }
+                    };
+
+                    // prompt app to start listening to user's speech
+                    Intent intent = new Intent (RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+                    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+
+                    speechRecognizer.startListening(intent);
+
+                }
             }
-        }
+        });
     }
+
+    /**
+     * Asks for permission for the app to record audio from the user
+     * @return hasPermission describes whether or not permission to record audio was/is given
+     * */
+    private Boolean hasPermissionToRecordAudio(){
+        Boolean hasPermission = false;
+        // if we don't have permission to record audio
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+
+            // request permission
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.RECORD_AUDIO},
+                    REQUEST_RECORD_AUDIO);
+            hasPermission = true;
+        }
+        return hasPermission;
+    }
+
 }
