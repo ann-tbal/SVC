@@ -35,16 +35,13 @@ public class MainActivity extends AppCompatActivity {
     private static final String CLIENT_ID = "92348339626f44faa05efdedf8ac93d1";
     private static final String [] scopes = {"app-remote-control", "streaming"};
 
-    // codes
-    private static final int REQUEST_RECORD_AUDIO = 8;
-
     // track info
     private TextView artistName;
     private TextView trackTitle;
     private Button commandState;
 
-    // request codes
-    private int SPEECH_PROMPTED = 8;
+    // player state's state
+    private static Boolean isSpeechEnabled = false;
 
     // app remote used to access Spotify features
     private SpotifyAppRemote mSpotifyAppRemote;
@@ -61,104 +58,21 @@ public class MainActivity extends AppCompatActivity {
         // button
         commandState = findViewById(R.id.commandState);
 
-        /* create speech recognizer */
-        SpeechRecognizer recognizer = SpeechRecognizer.createSpeechRecognizer(MainActivity.this);
-        // create recognition listener
-        RecognitionListener listener = new RecognitionListener() {
-            @Override
-            public void onReadyForSpeech(Bundle bundle) {
-
-                Log.e("MAIN", "onReadyForSpeech");
-            }
-
-            @Override
-            public void onBeginningOfSpeech() {
-                Log.e("MAIN", "onBeginningOfSpeech");
-            }
-
-            @Override
-            public void onRmsChanged(float v) {
-                Log.e("MAIN", "onRmsChanged");
-
-            }
-
-            @Override
-            public void onBufferReceived(byte[] bytes) {
-                Log.e("MAIN", "onBufferReceived");
-
-            }
-
-            @Override
-            public void onEndOfSpeech() {
-                Log.e("MAIN", "onEndOfSpeech");
-
-            }
-
-            @Override
-            public void onError(int i) {
-                Log.e("MAIN", "onError");
-
-            }
-
-            @Override
-            public void onResults(Bundle bundle) {
-                Log.e("MAIN", "onResults");
-                ArrayList data = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                String strData = "";
-                for (int i = 0; i<data.size(); i++) {
-                    strData += data.get(i);
-                }
-                Log.e("RESULTS", strData);
-
-            }
-
-            @Override
-            public void onPartialResults(Bundle bundle) {
-                Log.e("MAIN", "onPartial");
-
-            }
-
-            @Override
-            public void onEvent(int i, Bundle bundle) {
-                Log.e("MAIN", "onEvent");
-
-            }
-        };
-
-        // create prompt to trigger activity
-        Intent recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE,"en");
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, this.getPackageName());
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH);
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
-
-        // create recognition service callback to handle speech heard by speech recognition
-        RecognitionService recognitionService = new RecognitionService() {
-            @Override
-            protected void onStartListening(Intent intent, Callback callback) {
-                recognizer.setRecognitionListener(listener);
-                recognizer.startListening(recognizerIntent);
-            }
-
-            @Override
-            protected void onCancel(Callback callback) {
-
-            }
-
-            @Override
-            protected void onStopListening(Callback callback) {
-
-            }
-        };
-
+        // if user clicked the button
         commandState.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (recognizer.isRecognitionAvailable(MainActivity.this)){
-                    recognitionService.startActivity(recognizerIntent);
-                } else {
-                    Log.e("RECOGNITION SETUP", "Recognition service not available");
-                }
+
+                // if there's no speech recognition (i.e. user wants to command spotify player state)
+
+                    // get the results of the speech recognition
+                    // get the specific command
+                    // change spotify player state
+
+                // if speech recognition is enabled (i.e. user has already issued commands to player state
+
+                    // change the button to stop commanding
+
             }
         });
     }
@@ -237,23 +151,8 @@ public class MainActivity extends AppCompatActivity {
         artistName.setText(name);
     }
 
-    /**
-     * Asks for permission for the app to record audio from the user
-     * @return hasPermission describes whether or not permission to record audio was/is given
-     * */
-    private Boolean hasPermissionToRecordAudio(){
-        Boolean hasPermission = false;
-        // if we don't have permission to record audio
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-
-            // request permission
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.RECORD_AUDIO},
-                    REQUEST_RECORD_AUDIO);
-            hasPermission = true;
-        }
-        return hasPermission;
+    public Boolean getIsSpeechEnabled() {
+        return isSpeechEnabled;
     }
 
 
