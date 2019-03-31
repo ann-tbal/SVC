@@ -46,6 +46,8 @@ public class MainActivity extends AppCompatActivity {
     // app remote used to access Spotify features
     private SpotifyAppRemote mSpotifyAppRemote;
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,6 +64,11 @@ public class MainActivity extends AppCompatActivity {
         commandState.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                isSpeechEnabled = true;
+                // instantiate Listener class
+                Listener listener = new Listener();
+                Intent recognizerIntent = listener.getIntent();
+                listener.startActivity(recognizerIntent);
 
                 // if there's no speech recognition (i.e. user wants to command spotify player state)
 
@@ -75,6 +82,11 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        
     }
 
     @Override
