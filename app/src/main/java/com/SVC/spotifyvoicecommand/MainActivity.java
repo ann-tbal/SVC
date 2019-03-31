@@ -1,6 +1,7 @@
 package com.SVC.spotifyvoicecommand;
 
 import android.Manifest;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.speech.RecognitionListener;
@@ -22,6 +23,7 @@ import com.spotify.android.appremote.api.SpotifyAppRemote;
 
 import com.spotify.protocol.types.Track;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -41,7 +43,10 @@ public class MainActivity extends AppCompatActivity {
     private TextView trackTitle;
     private Button commandState;
 
-    // appremote used to access Spotify features
+    // request codes
+    private int SPEECH_PROMPTED = 8;
+
+    // app remote used to access Spotify features
     private SpotifyAppRemote mSpotifyAppRemote;
 
     @Override
@@ -56,7 +61,85 @@ public class MainActivity extends AppCompatActivity {
         // button
         commandState = findViewById(R.id.commandState);
 
-        onStartCommandState();
+        /* create speech recognizer */
+        SpeechRecognizer recognizer = SpeechRecognizer.createSpeechRecognizer(MainActivity.this);
+        // create recognition listener
+        RecognitionListener listener = new RecognitionListener() {
+            @Override
+            public void onReadyForSpeech(Bundle bundle) {
+
+                Log.e("MAIN", "onReadyForSpeech");
+            }
+
+            @Override
+            public void onBeginningOfSpeech() {
+                Log.e("MAIN", "onBeginningOfSpeech");
+            }
+
+            @Override
+            public void onRmsChanged(float v) {
+                Log.e("MAIN", "onRmsChanged");
+
+            }
+
+            @Override
+            public void onBufferReceived(byte[] bytes) {
+                Log.e("MAIN", "onBufferReceived");
+
+            }
+
+            @Override
+            public void onEndOfSpeech() {
+                Log.e("MAIN", "onEndOfSpeech");
+
+            }
+
+            @Override
+            public void onError(int i) {
+                Log.e("MAIN", "onError");
+
+            }
+
+            @Override
+            public void onResults(Bundle bundle) {
+                Log.e("MAIN", "onResults");
+                ArrayList data = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                String strData = "";
+                for (int i = 0; i<data.size(); i++) {
+                    strData += data.get(i);
+                }
+                Log.e("RESULTS", strData);
+
+            }
+
+            @Override
+            public void onPartialResults(Bundle bundle) {
+                Log.e("MAIN", "onPartial");
+
+            }
+
+            @Override
+            public void onEvent(int i, Bundle bundle) {
+                Log.e("MAIN", "onEvent");
+
+            }
+        };
+        recognizer.setRecognitionListener(listener);
+
+        // create prompt to trigger activity
+        Intent recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE,"en");
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, this.getPackageName());
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH);
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
+
+        commandState.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                recognizer.startListening(recognizerIntent);
+            }
+        });
+
 
     }
 
@@ -135,95 +218,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Deals with the event that the user wants to start making commands for the Spotify app remote
-     */
-    private void onStartCommandState() {
-        // listener for the button that handles spotify commands
-        commandState.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                // only initiate commands if permission to record audio given
-                if (hasPermissionToRecordAudio()) {
-
-                    // create object to recognise speech user will speak
-                    SpeechRecognizer speechRecognizer = SpeechRecognizer.createSpeechRecognizer(MainActivity.this);
-
-                    // create something that will recognise user's current verbal state
-                    // (i.e. if they're talking, stopped talking, etc.)
-                    RecognitionListener listener = new RecognitionListener() {
-                        @Override
-                        public void onReadyForSpeech(Bundle bundle) {
-                            Log.d("TAG", "onReady");
-                        }
-
-                        @Override
-                        public void onBeginningOfSpeech() {
-                            Log.d("TAG", "onBeginner");
-
-                        }
-
-                        @Override
-                        public void onRmsChanged(float v) {
-                            Log.d("TAG", "onRMS");
-
-                        }
-
-                        @Override
-                        public void onBufferReceived(byte[] bytes) {
-                            Log.d("TAG", "onBuffer");
-
-                        }
-
-                        @Override
-                        public void onEndOfSpeech() {
-                            Log.d("TAG", "onEnd");
-
-                        }
-
-                        @Override
-                        public void onError(int i) {
-                            Log.d("TAG", "onError");
-
-                        }
-
-                        @Override
-                        public void onResults(Bundle bundle) {
-                            Log.d("TAG", "onResults");
-                            ArrayList<String> data = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                            String resultAsString = "";
-                            for(int i = 0; i < data.size(); i++){
-                                resultAsString = resultAsString + data.get(i);
-                            }
-                            Log.d("Tag", resultAsString);
-                        }
-
-                        @Override
-                        public void onPartialResults(Bundle bundle) {
-                            Log.d("TAG", "onPartial");
-
-                        }
-
-                        @Override
-                        public void onEvent(int i, Bundle bundle) {
-                            Log.d("TAG", "onEvent");
-
-                        }
-                    };
-
-                    // prompt app to start listening to user's speech
-                    Intent intent = new Intent (RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-                    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
-                    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-
-                    speechRecognizer.startListening(intent);
-
-                }
-            }
-        });
-    }
-
-    /**
      * Asks for permission for the app to record audio from the user
      * @return hasPermission describes whether or not permission to record audio was/is given
      * */
@@ -241,5 +235,6 @@ public class MainActivity extends AppCompatActivity {
         }
         return hasPermission;
     }
+
 
 }
