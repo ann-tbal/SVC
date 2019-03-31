@@ -124,7 +124,6 @@ public class MainActivity extends AppCompatActivity {
 
             }
         };
-        recognizer.setRecognitionListener(listener);
 
         // create prompt to trigger activity
         Intent recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -133,14 +132,35 @@ public class MainActivity extends AppCompatActivity {
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH);
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
 
+        // create recognition service callback to handle speech heard by speech recognition
+        RecognitionService recognitionService = new RecognitionService() {
+            @Override
+            protected void onStartListening(Intent intent, Callback callback) {
+                recognizer.setRecognitionListener(listener);
+                recognizer.startListening(recognizerIntent);
+            }
+
+            @Override
+            protected void onCancel(Callback callback) {
+
+            }
+
+            @Override
+            protected void onStopListening(Callback callback) {
+
+            }
+        };
+
         commandState.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                recognizer.startListening(recognizerIntent);
+                if (recognizer.isRecognitionAvailable(MainActivity.this)){
+                    recognitionService.startActivity(recognizerIntent);
+                } else {
+                    Log.e("RECOGNITION SETUP", "Recognition service not available");
+                }
             }
         });
-
-
     }
 
     @Override
