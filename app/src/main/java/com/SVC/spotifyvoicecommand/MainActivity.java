@@ -46,7 +46,12 @@ public class MainActivity extends AppCompatActivity {
     // app remote used to access Spotify features
     private SpotifyAppRemote mSpotifyAppRemote;
 
+    // codes
+    private static final int REQUEST_RECORD_AUDIO = 34;
 
+    // Speech recognizer stuff
+    SpeechRecognizer speechRecognizer;
+    Intent recognizerIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,33 +65,158 @@ public class MainActivity extends AppCompatActivity {
         // button
         commandState = findViewById(R.id.commandState);
 
+        // recognition listener
+        SpeechRecognitionListener SRL = new SpeechRecognitionListener();
+
+       // create speech recognizer
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+        speechRecognizer.setRecognitionListener(SRL);
+
+
+        // create intents
+        recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE,"en");
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, this.getPackageName());
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH);
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
+
+
         // if user clicked the button
         commandState.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                isSpeechEnabled = true;
-                // instantiate Listener class
-                Listener listener = new Listener();
-                Intent recognizerIntent = listener.getIntent();
-                listener.startActivity(recognizerIntent);
 
-                // if there's no speech recognition (i.e. user wants to command spotify player state)
+
+                // if permission is not granted
+                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(MainActivity.this,
+                            new String[]{Manifest.permission.RECORD_AUDIO},
+                            REQUEST_RECORD_AUDIO);
+                    Log.d("MainActivity ", "requesting permission");
+
+                } else {
+                    Log.d("MainActivity", "Permission granted");
+
+
+                    // If there's a speech recognition service available
+                    if (speechRecognizer.isRecognitionAvailable(MainActivity.this)) {
+                        Log.d("MainActivity", "onBeginningOfSpeech");
+                        speechRecognizer.startListening(recognizerIntent);
+
+                        // analyse results
+
+
+                    } else {
+                        Log.e("MainActivity", "Speech recognition service not available");
+                    }
+
+                    // if there's no speech recognition (i.e. user wants to command spotify player state)
 
                     // get the results of the speech recognition
                     // get the specific command
                     // change spotify player state
 
-                // if speech recognition is enabled (i.e. user has already issued commands to player state
+                    // if speech recognition is enabled (i.e. user has already issued commands to player state
 
                     // change the button to stop commanding
 
+                }
             }
         });
     }
 
+
+    class SpeechRecognitionListener implements RecognitionListener{
+
+        @Override
+        public void onBeginningOfSpeech () {
+            Log.e("LISTENER CLASS", "onBeginningOfSpeech");
+        }
+
+        @Override
+        public void onReadyForSpeech(Bundle bundle) {
+            Log.e("LISTENER CLASS", "onReadyForSpeech");
+
+        }
+
+        @Override
+        public void onRmsChanged(float v) {
+            Log.e("LISTENER CLASS", "onRmsChanged");
+
+        }
+
+        @Override
+        public void onBufferReceived(byte[] bytes) {
+            Log.e("LISTENER CLASS", "onBufferReceived");
+
+        }
+
+        @Override
+        public void onEndOfSpeech() {
+            Log.e("LISTENER CLASS", "onEndOfSpeech");
+
+        }
+
+        @Override
+        public void onError(int i) {
+            Log.e("LISTENER CLASS", "onError");
+
+        }
+
+        @Override
+        public void onResults(Bundle bundle) {
+            Log.e("LISTENER CLASS", "onResults");
+
+            String strResults = "";
+            ArrayList<String> data = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+            for (int i = 0; i < data.size(); i++) {
+                strResults = strResults + data.get(i) + " ";
+            }
+            Log.d("RESULTS, ", strResults);
+
+            if (strResults.contains("resume")) {
+                mSpotifyAppRemote.getPlayerApi().resume();
+            } else if (strResults.contains("pause")) {
+                mSpotifyAppRemote.getPlayerApi().pause();
+            }
+        }
+
+        @Override
+        public void onPartialResults(Bundle bundle) {
+            Log.e("LISTENER CLASS", "onPartialResults");
+
+        }
+
+        @Override
+        public void onEvent(int i, Bundle bundle) {
+            Log.e("LISTENER CLASS", "onEvent");
+
+        }
+
+
+    }
+
+    /**
+     * This receives the permissions result(s) from the user.
+     * @param requestCode
+     * @param permissions
+     * @param grantResults
+     */
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults){
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        switch(requestCode) {
+            case REQUEST_RECORD_AUDIO:
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    speechRecognizer.startListening(recognizerIntent);
+                } else {
+                    Log.e("MainActivity", "Permission not granted.");
+                }
+                return;
+        }
+
     }
 
     @Override

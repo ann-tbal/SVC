@@ -50,7 +50,7 @@
     <Button
         android:id="@+id/commandState"
         android:layout_width="273dp"
-        android:layout_height="48dp"
+        android:layout_height="47dp"
         android:layout_marginStart="126dp"
         android:layout_marginLeft="126dp"
         android:layout_marginTop="69dp"
@@ -58,12 +58,13 @@
         android:layout_marginRight="127dp"
         android:layout_marginBottom="304dp"
         android:background="@color/colorPrimary"
-        android:textColor="@color/colorAccent"
         android:text="@string/recording_state_play"
+        android:textColor="@color/colorAccent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/artistName" />
+        app:layout_constraintTop_toBottomOf="@+id/artistName"
+        tools:onClick="Listener.java" />
 
     <android.support.constraint.Guideline
         android:id="@+id/guideline"
