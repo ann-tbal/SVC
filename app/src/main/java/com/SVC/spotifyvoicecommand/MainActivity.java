@@ -1,15 +1,14 @@
 package com.SVC.spotifyvoicecommand;
 
 import android.Manifest;
-import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.speech.RecognitionListener;
-import android.speech.RecognitionService;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.res.TypedArrayUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -23,10 +22,9 @@ import com.spotify.android.appremote.api.SpotifyAppRemote;
 
 import com.spotify.protocol.types.Track;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Locale;
-
+import java.util.Arrays;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -39,9 +37,6 @@ public class MainActivity extends AppCompatActivity {
     private TextView artistName;
     private TextView trackTitle;
     private Button commandState;
-
-    // player state's state
-    private static Boolean isSpeechEnabled = false;
 
     // app remote used to access Spotify features
     private SpotifyAppRemote mSpotifyAppRemote;
@@ -86,7 +81,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-
                 // if permission is not granted
                 if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                     ActivityCompat.requestPermissions(MainActivity.this,
@@ -102,9 +96,6 @@ public class MainActivity extends AppCompatActivity {
                     if (speechRecognizer.isRecognitionAvailable(MainActivity.this)) {
                         Log.d("MainActivity", "onBeginningOfSpeech");
                         speechRecognizer.startListening(recognizerIntent);
-
-                        // analyse results
-
 
                     } else {
                         Log.e("MainActivity", "Speech recognition service not available");
@@ -170,15 +161,11 @@ public class MainActivity extends AppCompatActivity {
             String strResults = "";
             ArrayList<String> data = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
             for (int i = 0; i < data.size(); i++) {
-                strResults = strResults + data.get(i) + " ";
+                strResults = strResults + data.get(i) + ", ";
             }
             Log.d("RESULTS, ", strResults);
 
-            if (strResults.contains("resume")) {
-                mSpotifyAppRemote.getPlayerApi().resume();
-            } else if (strResults.contains("pause")) {
-                mSpotifyAppRemote.getPlayerApi().pause();
-            }
+            adjustPlayerState(data);
         }
 
         @Override
@@ -192,12 +179,10 @@ public class MainActivity extends AppCompatActivity {
             Log.e("LISTENER CLASS", "onEvent");
 
         }
-
-
     }
 
     /**
-     * This receives the permissions result(s) from the user.
+     * This receives the permissions result(s)
      * @param requestCode
      * @param permissions
      * @param grantResults
@@ -239,14 +224,12 @@ public class MainActivity extends AppCompatActivity {
                         mSpotifyAppRemote = spotifyAppRemote;
                         Log.d("MainActivity", "Connected! Yay!");
 
-                        // Now you can start interacting with App Remote
                         connected();
                     }
 
                     public void onFailure(Throwable throwable) {
                         Log.e("MyActivity", throwable.getMessage(), throwable);
 
-                        // Something went wrong when attempting to connect! Handle errors here
                     }
                 });
     }
@@ -293,8 +276,39 @@ public class MainActivity extends AppCompatActivity {
         artistName.setText(name);
     }
 
-    public Boolean getIsSpeechEnabled() {
-        return isSpeechEnabled;
+    /**
+     * Converts the player state after a command has been given.
+     * E.g. if user says, "Pause music", then the track is paused.
+     * @param commands the list of commands user has given.
+     * NOTE: the only commands right now are:
+     *                 Pause, Play {Artist, Song},
+     *                 Skip to the next song, Get the name of the song,
+     *                 Get the name of the Artist, Get the name of the album,
+     */
+    private void adjustPlayerState(ArrayList<String> commands) {
+
+        // figure out the main command being given
+        // the main command include: Pause, play (song, artist, album), shuffle, skip, get (song
+        // title, artist name, album name)
+        // then give the command using the spotify app remote
+
+        // get further details of the command
+        String [] commandsArr = commands.get(0).split(" ");
+        List<String> commandsList = Arrays.asList(commandsArr);
+
+        // convert the verbal command to a spotify command
+        if (commands.get(0).contains("pause")) {
+            mSpotifyAppRemote.getPlayerApi().pause();
+        } else if (commands.get(0).contains("resume")) {
+            mSpotifyAppRemote.getPlayerApi().resume();
+        } else if (commands.get(0).contains("skip")) {
+            // there are 2 options to skipping a track: skip next and skip previous.
+            if (commandsList.contains("next")) {
+                mSpotifyAppRemote.getPlayerApi().skipNext();
+            } else if (commandsList.contains("previous")) {
+                mSpotifyAppRemote.getPlayerApi().skipPrevious();
+            }
+        } 
     }
 
 
