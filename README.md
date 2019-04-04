@@ -14,6 +14,7 @@
 </i> 
 
 # TODO
+- Error handling! 
 - Improve modularity by discrete-ifying functions 
 - Improve flexibility of commands, make more natural as opposed to being unnaturally robotic (perhaps by making enums of PAUSE, PLAY, GET SYNONYMS)
 - Create a "Get" command that informs user the names of the artist, track, and/or album. Use Android text to speech, somehow. 
