@@ -9,9 +9,7 @@
 
 > Soap everywhere, too much time to wash everything off and then dry just to change music. 
 
-> Enter Spotify Voice Command
-
-> Saving 45.6 milliseconds of time wasted washing and drying off! (SVC)!
+> Enter Spotify Voice Command, an app that easily saves you 45.6 seconds of time wasted washing and drying off! 
 
 </i> 
 
