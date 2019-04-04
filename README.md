@@ -17,3 +17,10 @@
 - Improve modularity by discrete-ifying functions 
 - Improve flexibility of commands, make more natural as opposed to being unnaturally robotic (perhaps by making enums of PAUSE, PLAY, GET SYNONYMS)
 - Create a "Get" command that informs user the names of the artist, track, and/or album. Use Android text to speech, somehow. 
+
+# ANDROID 
+- API Compiled Level: 27
+- Min Level: 15
+
+# SPOTIFY
+- Link to the <a href=https://github.com/spotify/android-sdk/releases> Spotify required JAAR, AAR files </a>
