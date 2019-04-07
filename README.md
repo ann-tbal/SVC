@@ -14,6 +14,7 @@
 </i> 
 
 # TODO
+- "Play" command
 - Error handling! 
 - When error occurs, prompt another command
 - Improve modularity by discrete-ifying functions 
