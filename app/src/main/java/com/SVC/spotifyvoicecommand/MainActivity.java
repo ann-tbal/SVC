@@ -3,12 +3,12 @@ package com.SVC.spotifyvoicecommand;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.res.TypedArrayUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -28,14 +28,16 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static Fields fields = new Fields();
+
     // required info for authentication
-    private static final String REDIRECT_URI = "com.SVC.spotifyvoicecommand://callback";
-    private static final String CLIENT_ID = "92348339626f44faa05efdedf8ac93d1";
-    private static final String [] scopes = {"app-remote-control", "streaming"};
+    private static final String REDIRECT_URI = fields.getREDIRECT_URI();
+    private static final String CLIENT_ID = fields.getCLIENT_ID();
 
     // track info
     private TextView artistName;
     private TextView trackTitle;
+    private TextView playerStateUpdate;
     private Button commandState;
 
     // app remote used to access Spotify features
@@ -43,6 +45,9 @@ public class MainActivity extends AppCompatActivity {
 
     // codes
     private static final int REQUEST_RECORD_AUDIO = 34;
+
+    // Track
+    Track track;
 
     // Speech recognizer stuff
     SpeechRecognizer speechRecognizer;
@@ -59,6 +64,9 @@ public class MainActivity extends AppCompatActivity {
 
         // button
         commandState = findViewById(R.id.commandState);
+
+        // update state
+        playerStateUpdate = findViewById(R.id.playerStateUpdate);
 
         // recognition listener
         SpeechRecognitionListener SRL = new SpeechRecognitionListener();
@@ -100,17 +108,6 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         Log.e("MainActivity", "Speech recognition service not available");
                     }
-
-                    // if there's no speech recognition (i.e. user wants to command spotify player state)
-
-                    // get the results of the speech recognition
-                    // get the specific command
-                    // change spotify player state
-
-                    // if speech recognition is enabled (i.e. user has already issued commands to player state
-
-                    // change the button to stop commanding
-
                 }
             }
         });
@@ -121,7 +118,9 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onBeginningOfSpeech () {
+
             Log.e("LISTENER CLASS", "onBeginningOfSpeech");
+
         }
 
         @Override
@@ -166,6 +165,7 @@ public class MainActivity extends AppCompatActivity {
             Log.d("RESULTS, ", strResults);
 
             adjustPlayerState(data);
+
         }
 
         @Override
@@ -250,7 +250,7 @@ public class MainActivity extends AppCompatActivity {
                 .setEventCallback(playerState -> {
 
                     // get the player's track
-                    final Track track = playerState.track;
+                    track = playerState.track;
 
                     // if the track exists
                     if (track != null) {
@@ -278,37 +278,100 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Converts the player state after a command has been given.
-     * E.g. if user says, "Pause music", then the track is paused.
      * @param commands the list of commands user has given.
      * NOTE: the only commands right now are:
-     *                 Pause, Play {Artist, Song},
-     *                 Skip to the next song, Get the name of the song,
-     *                 Get the name of the Artist, Get the name of the album,
+     *                 Pause, Play {Artist, Song, album},
+     *                 Skip to the next song
+     * E.g. if user says, "Pause music", then the track is paused.
      */
     private void adjustPlayerState(ArrayList<String> commands) {
 
-        // figure out the main command being given
-        // the main command include: Pause, play (song, artist, album), shuffle, skip, get (song
-        // title, artist name, album name)
-        // then give the command using the spotify app remote
+        // organize the command into [Main command, Detailed command]
+        String [] detailedCommand = organizeCommand(commands);
 
-        // get further details of the command
+        // update log
+        Log.d("detailedCommand", detailedCommand[0] + ", " + detailedCommand[1]);
+
+        // adjust player state according to main command, going from simple to complex commands
+        switch (detailedCommand[0]) {
+            case "pause":
+                mSpotifyAppRemote.getPlayerApi().pause();
+                playerStateUpdate.setText("MUSIC PAUSED");
+                break;
+            case "resume":
+                mSpotifyAppRemote.getPlayerApi().resume();
+                playerStateUpdate.setText("MUSIC RESUMED");
+                break;
+            case "skip":
+                if (detailedCommand[1].contains("previous")) {
+                    mSpotifyAppRemote.getPlayerApi().skipPrevious();
+                    playerStateUpdate.setText("MUSIC SKIPPED TO PREVIOUS SONG");
+                } else {
+                    mSpotifyAppRemote.getPlayerApi().skipNext();
+                    playerStateUpdate.setText("MUSIC SKIPPED TO NEXT SONG");
+
+                }
+                break;
+            case "play":
+                // mSpotifyAppRemote.getPlayerApi().play("spotify:artist:6qqNVTkY8uBg9cP3Jd7DAH");
+                getURIRequest(detailedCommand[1]);
+
+        }
+
+    }
+
+    /**
+     * Gets the uri of a {song/artist/album} the user desires so we can play it
+     * @param request the URI of the specific {album/artist/song} user wants to play
+     * E.g.
+     *                input: getURIRequest("billie eilish")
+     *                output: 6qqNVTkY8uBg9cP3Jd7DAH
+     *
+     */
+    private String getURIRequest (String request) {
+        String uriRequest = "";
+
+        // open a link to spotify search and search for the thing the user wants to play
+
+        String url = "https://api.spotify.com/v1/search/" + request;
+        Intent searchSpotify = new Intent(Intent.ACTION_VIEW);
+        searchSpotify.setData(Uri.parse(url));
+        startActivity(searchSpotify);
+
+
+        return uriRequest;
+    }
+
+    /**
+     * @param commands the command the user has given
+     * @return organizedCommand, a 2-element array.
+     * The first element holds the main command.
+     * Main command = "play", "pause", "get"...
+     * The second element holds the rest of the command.
+     * E.g. command = "Play music now"
+     *                  input: organizeCommand("Play music now")
+     *                  output: ["Play", "music now"]
+     */
+    private String[] organizeCommand (ArrayList<String> commands) {
+
         String [] commandsArr = commands.get(0).split(" ");
         List<String> commandsList = Arrays.asList(commandsArr);
 
-        // convert the verbal command to a spotify command
-        if (commands.get(0).contains("pause")) {
-            mSpotifyAppRemote.getPlayerApi().pause();
-        } else if (commands.get(0).contains("resume")) {
-            mSpotifyAppRemote.getPlayerApi().resume();
-        } else if (commands.get(0).contains("skip")) {
-            // there are 2 options to skipping a track: skip next and skip previous.
-            if (commandsList.contains("next")) {
-                mSpotifyAppRemote.getPlayerApi().skipNext();
-            } else if (commandsList.contains("previous")) {
-                mSpotifyAppRemote.getPlayerApi().skipPrevious();
+        String main = "";
+        String rest = "";
+
+        for (int i = 0; i < commandsList.size(); i++) {
+            // if this is the first i, then this is the main command.
+            if (i == 0) {
+                main = commandsList.get(i);
+            } else {
+                rest = rest + commandsList.get(i) + " ";
             }
-        } 
+        }
+
+        String [] organizedCommand = {main, rest};
+        return organizedCommand;
+
     }
 
 

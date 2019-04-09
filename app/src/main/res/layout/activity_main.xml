@@ -31,7 +31,6 @@
 
     <TextView
         android:id="@+id/trackTitle"
-        android:textColor="@color/colorAccent"
         android:layout_width="323dp"
         android:layout_height="60dp"
         android:layout_marginStart="44dp"
@@ -41,6 +40,7 @@
         android:layout_marginRight="44dp"
         android:layout_marginBottom="516dp"
         android:gravity="center"
+        android:textColor="@color/colorAccent"
         android:textSize="24sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -51,20 +51,20 @@
         android:id="@+id/commandState"
         android:layout_width="273dp"
         android:layout_height="47dp"
-        android:layout_marginStart="126dp"
-        android:layout_marginLeft="126dp"
-        android:layout_marginTop="69dp"
-        android:layout_marginEnd="127dp"
-        android:layout_marginRight="127dp"
-        android:layout_marginBottom="304dp"
+        android:layout_marginStart="72dp"
+        android:layout_marginLeft="72dp"
+        android:layout_marginTop="61dp"
+        android:layout_marginEnd="66dp"
+        android:layout_marginRight="66dp"
+        android:layout_marginBottom="43dp"
         android:background="@color/colorPrimary"
         android:text="@string/recording_state_play"
         android:textColor="@color/colorAccent"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/playerStateUpdate"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/artistName"
-        tools:onClick="Listener.java" />
+        app:layout_constraintTop_toBottomOf="@+id/artistName" />
 
     <android.support.constraint.Guideline
         android:id="@+id/guideline"
@@ -72,6 +72,29 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         app:layout_constraintGuide_begin="20dp" />
+
+    <TextView
+        android:id="@+id/playerStateUpdate"
+        android:layout_width="279dp"
+        android:layout_height="55dp"
+        android:layout_marginStart="69dp"
+        android:layout_marginLeft="69dp"
+        android:layout_marginTop="43dp"
+        android:layout_marginEnd="64dp"
+        android:layout_marginRight="64dp"
+        android:layout_marginBottom="208dp"
+        android:gravity="center"
+        android:textColor="@color/colorPrimary"
+        android:textSize="18sp"
+        android:textStyle="italic"
+        android:typeface="normal"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/commandState"
+        tools:text="rre" />
 
 
 </android.support.constraint.ConstraintLayout>
