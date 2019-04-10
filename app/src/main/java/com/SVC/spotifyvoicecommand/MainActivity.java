@@ -28,11 +28,9 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static Fields fields = new Fields();
-
     // required info for authentication
-    private static final String REDIRECT_URI = fields.getREDIRECT_URI();
-    private static final String CLIENT_ID = fields.getCLIENT_ID();
+    private final String REDIRECT_URI = getString(R.string.redirect_uri);
+    private final String CLIENT_ID = getString(R.string.client_id);
 
     // track info
     private TextView artistName;
@@ -314,7 +312,11 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case "play":
                 // mSpotifyAppRemote.getPlayerApi().play("spotify:artist:6qqNVTkY8uBg9cP3Jd7DAH");
-                getURIRequest(detailedCommand[1]);
+                // getURIRequest(detailedCommand[1]);
+
+                Intent startPlayAuthentication = new Intent(this, PlayAuthentication.class);
+                startActivity(startPlayAuthentication);
+
 
         }
 

@@ -30,9 +30,24 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".PlayActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+        </activity>
+
+        <activity
+            android:name=".PlayAuthentication"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+        </activity>
+
         <activity
             android:name="com.spotify.sdk.android.authentication.LoginActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+        
+
+
+        
     </application>
 
 </manifest>
