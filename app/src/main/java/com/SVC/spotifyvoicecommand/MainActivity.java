@@ -26,17 +26,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
 
-    // required info for authentication
-    private final String REDIRECT_URI = getString(R.string.redirect_uri);
-    private final String CLIENT_ID = getString(R.string.client_id);
+public class MainActivity extends AppCompatActivity {
 
     // track info
     private TextView artistName;
     private TextView trackTitle;
     private TextView playerStateUpdate;
     private Button commandState;
+
+    private String REDIRECT_URI;
+    private String CLIENT_ID;
 
     // app remote used to access Spotify features
     private SpotifyAppRemote mSpotifyAppRemote;
@@ -55,6 +55,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // required info for authentication
+       REDIRECT_URI = getString(R.string.redirect_uri);
+       CLIENT_ID = getString(R.string.client_id);
 
         // track info
         trackTitle = findViewById(R.id.trackTitle);

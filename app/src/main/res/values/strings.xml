@@ -3,7 +3,6 @@
     <string name="recording_state_play"> Start Recording Commands </string>
     <string name="recording_state_pause"> Stop Recording Commands </string>
 
-    // authentication
     <string name="client_id"> 92348339626f44faa05efdedf8ac93d1 </string>
     <string name="redirect_uri"> com.SVC.spotifyvoicecommand://callback </string>
     <string-array name="scopes">

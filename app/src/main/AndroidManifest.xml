@@ -38,8 +38,10 @@
 
         <activity
             android:name=".PlayAuthentication"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
         </activity>
+        
+
 
         <activity
             android:name="com.spotify.sdk.android.authentication.LoginActivity"

@@ -13,13 +13,19 @@ import java.security.SecureRandom;
 public class PlayAuthentication extends AppCompatActivity {
 
     private static String accessToken = "";
-    private String CLIENT_ID = getString(R.string.client_id);
-    private String REDIRECT_URI = getString(R.string.redirect_uri);
+    private String CLIENT_ID = "";
+    private String REDIRECT_URI = "";
 
     @Override
     protected void onCreate (Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // required info for authentication
+        REDIRECT_URI = getString(R.string.redirect_uri);
+        CLIENT_ID = getString(R.string.client_id);
+
+
         createAuthURL();
 
     }
