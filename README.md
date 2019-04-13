@@ -27,3 +27,6 @@
 
 # SPOTIFY
 - Link to the <a href=https://github.com/spotify/android-sdk/releases> Spotify required JAAR, AAR files </a>
+
+# Best practices used
+- None
