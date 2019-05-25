@@ -13,8 +13,6 @@
 
 
 </i> 
-# PICTURES 
-
 # TODO
 - "Play" command
 - Error handling! 
@@ -30,5 +28,8 @@
 # SPOTIFY
 - Link to the <a href=https://github.com/spotify/android-sdk/releases> Spotify required JAAR, AAR files </a>
 
+# PICTURES
+ <to insert here> 
+  
 # Best practices used
 - None
