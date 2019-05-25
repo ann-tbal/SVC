@@ -11,6 +11,8 @@
 
 > Enter Spotify Voice Command, an app that easily saves you 45.6 seconds of time wasted washing and drying off! 
 
+# PICTURES
+ <to insert here> 
 </i> 
 
 # TODO
